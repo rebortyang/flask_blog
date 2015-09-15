@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block title %}Flasky{% endblock %}
+
+{% block content%}
+    <div class="container">
+
+        {% for message in get_flashed_messages()%}
+        <div class="alert alert-warning">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                {{message}}
+        </div>
+        {%endfor%}
+
+        {% block page_content %}
+        <div class="page-header">
+            <h1>hello,{%if name%} {{name}} {% else %} stranger! {%endif%}!</h1>
+        </div>
+
+        {{wtf.quick_form(form)}}
+
+        <p>the local time is {{moment(current_time).format('YYYY 年 MM 月 Do 日 h:mm:ss a')}}</p>
+        <p>that was {{ moment(current_time).fromNow(refresh=True) }}</p>
+
+        {% endblock %}
+
+    </div>
+{%endblock%}
+
+
+
