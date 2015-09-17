@@ -2,7 +2,7 @@
 __author__ = 'yangjiebin'
 
 from flask import Flask
-from flask.ext.script import Manager
+from flask.ext.script import Manager,Shell
 from flask import render_template
 from flask.ext.bootstrap import Bootstrap
 from flask.ext.moment import Moment
@@ -27,17 +27,27 @@ bootstrap = Bootstrap(app)
 moment = Moment(app)
 db = SQLAlchemy(app)
 
+
 #路由和view
 @app.route('/',methods=['GET','POST'])
 def index():
     form = NameForms()   #form handle
     if form.validate_on_submit():
-        old_name = session.get('name')     #flash
-        if old_name is not None and old_name != form.name.data:
-            flash('you have change the name!',category='message')
+        user = User.query.filter_by(username=form.name.data).first()
+        if user is None:
+            user = User(username=form.name.data)
+            db.session.add(user)
+            session['known'] = False
+        else:
+            session['known'] = True
         session['name'] = form.name.data
+        form.name.data = ''
+        # old_name = session.get('name')     #flash
+        # if old_name is not None and old_name != form.name.data:
+        #     flash('you have change the name!',category='message')
+        # session['name'] = form.name.data
         return redirect(url_for('index'))
-    return render_template('index.html',current_time=datetime.utcnow(),form=form,name=session.get('name'))
+    return render_template('index.html',current_time=datetime.utcnow(),form=form,name=session.get('name'),known=session.get('known',False))
 
 @app.route('/user/<name>')
 def user(name):
@@ -77,6 +87,9 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
+def make_shell_context():
+    return dict(app=app,db=db,User=User,Role=Role)
+manager.add_command("shell",Shell( make_context=make_shell_context ))
 
 if __name__ == '__main__':
 
