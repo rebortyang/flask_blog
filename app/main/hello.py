@@ -13,6 +13,7 @@ from wtforms.validators import Required
 from flask import session,redirect,url_for,flash
 from flask.ext.sqlalchemy import SQLAlchemy
 import os
+from flask.ext.migrate import Migrate,MigrateCommand
 
 template_folder = '../templates'
 baseidr = os.path.abspath(os.path.dirname(__file__))
@@ -26,6 +27,7 @@ manager = Manager(app)
 bootstrap = Bootstrap(app)
 moment = Moment(app)
 db = SQLAlchemy(app)
+migrate = Migrate(app,db)
 
 
 #路由和view
@@ -89,7 +91,11 @@ class User(db.Model):
 
 def make_shell_context():
     return dict(app=app,db=db,User=User,Role=Role)
+
+# add data to shell
 manager.add_command("shell",Shell( make_context=make_shell_context ))
+# migrate
+manager.add_command('db',MigrateCommand)
 
 if __name__ == '__main__':
 
