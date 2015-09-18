@@ -14,6 +14,8 @@ from flask import session,redirect,url_for,flash
 from flask.ext.sqlalchemy import SQLAlchemy
 import os
 from flask.ext.migrate import Migrate,MigrateCommand
+from flask.ext.mail import Mail,Message
+from threading import Thread
 
 template_folder = '../templates'
 baseidr = os.path.abspath(os.path.dirname(__file__))
@@ -23,11 +25,22 @@ app.config['SECRET_KEY'] = 'hard to guess string'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(baseidr,'data.sqlite')
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWM'] = True
 
+app.config['MAIL_SERVER'] = 'smtp.sohu.com'
+app.config['MAIL_PORT'] = 25
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_USE_TLS'] = True
+app.config['FLASKY_MAIL_SUBJECT_PREFIX'] = '[flasky]'
+app.config['FLASKY_MAIL_SENDER'] = 'Flasky admin op1616op@sohu.com'
+app.config['FLASKY_ADMIN'] = os.environ.get('FLASKY_ADMIN')
+
+
 manager = Manager(app)
 bootstrap = Bootstrap(app)
 moment = Moment(app)
 db = SQLAlchemy(app)
 migrate = Migrate(app,db)
+mail = Mail(app)
 
 
 #路由和view
@@ -40,6 +53,8 @@ def index():
             user = User(username=form.name.data)
             db.session.add(user)
             session['known'] = False
+            if app.config['FLASKY_ADMIN']:
+                send_mail(app.config['FLASKY_ADMIN'],'NEW USER','mail/new_user',user=user)
         else:
             session['known'] = True
         session['name'] = form.name.data
@@ -91,6 +106,20 @@ class User(db.Model):
 
 def make_shell_context():
     return dict(app=app,db=db,User=User,Role=Role)
+
+# mail
+def send_async_email(app,msg):
+
+    with app.app_context(app,msg):
+        mail.send(msg)
+
+def send_mail(to,subject,template,**kwargs):
+    msg = Message(app.config['FLASKY_MAIL_SUBJECT_PREFIX'] + subject,sender=app.config['FLASKY_MAIL_SENDER'],recipients=[to])
+    msg.body = render_template(template+'.txt',**kwargs)
+    msg.html = render_template(template + '.html',**kwargs)
+    thr = Thread(target=send_async_email,args=[app,msg])
+    thr.start()
+    return thr
 
 # add data to shell
 manager.add_command("shell",Shell( make_context=make_shell_context ))
