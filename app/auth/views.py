@@ -2,7 +2,7 @@ from flask import render_template, redirect, request, url_for, flash
 from flask.ext.login import login_user, logout_user, login_required,current_user
 from . import auth
 from ..models import User
-from .forms import LoginForm,RegisterationForm,ChangePasswordForm
+from .forms import LoginForm,RegisterationForm,ChangePasswordForm,ResetRequestForm,ResetPasswordForm
 from .. import db
 from ..email import send_email
 
@@ -89,6 +89,40 @@ def change_password():
         else:
             flash('Invaild password')
     return render_template('auth/change_password.html',form=form)
+
+#   reset password
+#       chick a link -> input your email ->if exist : send mail to reset password -> chick a link -> table
+#                                           else: raise error                                           |
+#                                                                                                input psd -> msg:successful
+
+@auth.route('/reset_request',methods=['POST','GET'])
+def reset_request():
+    form = ResetRequestForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            token = user.generate_reset_token()
+            send_email(form.email.data,'reset your password','auth/email/reset_password',user=user,token=token,\
+                       next=request.args.get('next'))
+            flash('a new confirm email has been sent to you by mail.')
+            return redirect(url_for('auth.login'))
+    return render_template('auth/reset_request.html',form=form)
+
+@auth.route('/reset_password/<token>',methods=['POST','GET'])
+def reset_password(token):
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user is None:
+            return redirect(url_for('main.index'))
+        if user.reset_password(token,form.password.data):
+            flash('you have change you password successful.')
+            return redirect(url_for('auth.login'))
+        else:
+            flash('change you password failed')
+            return redirect(url_for('main.index'))
+    return render_template('auth/reset_password.html',form=form)
+
 
 
 

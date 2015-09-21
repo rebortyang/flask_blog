@@ -38,3 +38,14 @@ class ChangePasswordForm(Form):
     new_password = PasswordField('new password',validators=[Required(),EqualTo('password2',message='password2 is not match newPwd')])
     password2 = PasswordField('Confirm password',validators=[Required()])
     submit = SubmitField('Change password')
+
+class ResetRequestForm(Form):
+    email = StringField('email',validators=[Required(),Email(),Length(1,64)])
+    submit = SubmitField('submit')
+
+class ResetPasswordForm(Form):
+    email = StringField('email',validators=[Required(),Email(),Length(1,64)])
+    password = PasswordField('new password',validators=[Required(),EqualTo('password2',message='password2 is not match newPwd')])
+    password2 = PasswordField('confirm password',validators=[Required()])
+    submit = SubmitField('submit')
+

@@ -18,5 +18,10 @@
 
     {{wtf.quick_form(form)}}
 
+    <p>
+        forget your password?
+        <a href="{{url_for('auth.reset_request')}}">Chick here for to find it.</a>
+    </p>
+
 </div>
 {% endblock %}
