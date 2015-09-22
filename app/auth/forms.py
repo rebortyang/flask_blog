@@ -49,3 +49,8 @@ class ResetPasswordForm(Form):
     password2 = PasswordField('confirm password',validators=[Required()])
     submit = SubmitField('submit')
 
+class ChangeEmailForm(Form):
+    email = StringField('email',validators=[Required(),Email(),Length(1,64)])
+    password = PasswordField('password',validators=[Required()])
+    new_email = StringField('new email',validators=[Required(),Email(),Length(1,64)])
+    submit = SubmitField('submit')
