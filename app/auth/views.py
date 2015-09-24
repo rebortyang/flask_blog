@@ -6,6 +6,7 @@ from .forms import LoginForm,RegisterationForm,ChangePasswordForm,ResetRequestFo
 from .. import db
 from ..email import send_email
 
+
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -153,3 +154,5 @@ def change_email(token):
     else:
         flash('Invaild request...--')
     return redirect(url_for('main.index'))
+
+
