@@ -3,8 +3,9 @@ from werkzeug.security import generate_password_hash,check_password_hash
 from flask.ext.login import UserMixin,AnonymousUserMixin
 from . import login_manager
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from flask import current_app
+from flask import current_app,request
 from datetime import datetime
+import hashlib
 
 class Role(db.Model):
     __tablename__ = 'roles'
@@ -47,6 +48,8 @@ class User(db.Model,UserMixin):
     password_hash = db.Column(db.String(128))
     email = db.Column(db.String(64),unique=True,index=True)
     confirmed = db.Column(db.Boolean,default=False)
+    avatar_hash = db.Column(db.String(32))
+    posts = db.relationship('Post',backref='author',lazy='dynamic')
 
     def __init__(self,**kwargs):
         super(User,self).__init__(**kwargs)
@@ -55,6 +58,8 @@ class User(db.Model,UserMixin):
                 self.role = Role.query.filter_by(permissions=0xff).first()
             if self.role is None:
                 self.role = Role.query.filter_by(default=True).first()
+            if self.email is not None and self.avatar_hash is None:
+                self.avatar_hash = hashlib.md5(self.email.encode('utf-8')).hexdigest()
 
     def can(self,permissions):
         return self.role is not None and \
@@ -122,12 +127,21 @@ class User(db.Model,UserMixin):
         if self.query.filter_by(email=new_email).first() is not None:
             return False
         self.email = new_email
+        self.avatar_hash = hashlib.md5(self.email.encode('utf-8')).hexdigest()
         db.session.add(self)
         return True
 
     def ping(self):
         self.last_seen = datetime.utcnow()
         db.session.add(self)
+
+    def gravatar(self,size=100,default='identicon',rating='g'):
+        if request.is_secure:
+            url = 'https://secure.graavatar.com/avatar'
+        else:
+            url = 'http://www.gravatar.com/avatar'
+        hash = hashlib.md5(self.email.encode('utf-8')).hexdigest()
+        return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(url=url,hash=hash,size=size,default=default,rating=rating)
 
 
     def __repr__(self):
@@ -148,6 +162,14 @@ class AnonymousUser(AnonymousUserMixin):
     def is_administrator(self):
         return False
 login_manager.anonymous_user = AnonymousUser
+
+
+class Post(db.Model):
+    __tablename__ = 'posts'
+    id = db.Column(db.Integer,primary_key=True)
+    body = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime,index=True,default=datetime.utcnow)
+    author_id = db.Column(db.Integer,db.ForeignKey('users.id'))
 
 
 @login_manager.user_loader
