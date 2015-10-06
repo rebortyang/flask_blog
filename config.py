@@ -14,6 +14,7 @@ class Config:
     FLASKY_MAIL_SUBJECT_PREFIX = '[Flasky]'
     FLASKY_MAIL_SENDER = 'Flasky Admin <op1616op@sohu.com>'
     FLASKY_ADMIN = os.environ.get('FLASKY_ADMIN') or '353281855@qq.com'
+    FLASKY_POSTS_PER_PAGE = os.environ.get('FLASKY_POSTS_PER_PAGE') or 20
     WTF_CSRF_ENABLED = False
 
     @staticmethod
