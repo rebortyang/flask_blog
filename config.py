@@ -15,6 +15,8 @@ class Config:
     FLASKY_MAIL_SENDER = 'Flasky Admin <op1616op@sohu.com>'
     FLASKY_ADMIN = os.environ.get('FLASKY_ADMIN') or '353281855@qq.com'
     FLASKY_POSTS_PER_PAGE = os.environ.get('FLASKY_POSTS_PER_PAGE') or 20
+    FLASKY_FOLLOWERS_PER_PAGE = 50
+    FLASKY_COMMENTS_PER_PAGE = 20
     WTF_CSRF_ENABLED = False
 
     @staticmethod
