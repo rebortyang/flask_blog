@@ -37,7 +37,7 @@ dominate==2.1.12
 duplicity==0.6.23
 extras==0.0.3
 fuzzywuzzy==0.6.1
-html5lib==0.999
+html5lib==0.999999999
 httplib2==0.8
 itsdangerous==0.23
 lettuce==0.2.20
